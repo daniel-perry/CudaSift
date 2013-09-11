@@ -18,18 +18,58 @@ double ComputeSingular(CudaImage *img, CudaImage *svd);
 void PrintMatchData(SiftData &siftData1, SiftData &siftData2, CudaImage &img);
 void MatchAll(SiftData &siftData1, SiftData &siftData2, float *homography);
 
+
+#include "external/cpp-argparse/OptionParser.h"
+optparse::OptionParser buildParser()
+{
+  const std::string usage = "%prog [OPTION]... left.pgm right.pgm";
+  const std::string version = "%prog 0.3";
+  const std::string desc = "CUDA SIFT";
+  const std::string epilog = "";
+
+  optparse::OptionParser parser = optparse::OptionParser()
+    .usage(usage)
+    .version(version)
+    .description(desc)
+    .epilog(epilog);
+
+  /*
+  parser.add_option("-t","--numthreads").action("store").type("int").set_default(0).help("number of threads to use.");
+  parser.add_option("-r","--radius").action("store").type("int").set_default(1).help("patch radius.");
+  parser.add_option("-m","--maskvolume").action("store").help("only consider pixel locations in this binary mask");
+  */
+   
+  return parser;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Main program
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) 
 {     
+  optparse::OptionParser parser = buildParser(); 
+  optparse::Values & options = parser.parse_args(argc,argv);
+  std::vector<std::string> args = parser.args();
+
+  if(args.size() < 2)
+  {
+    parser.print_help();
+    return 1;
+  }
+  std::string left_fn = args[0];
+  std::string right_fn = args[1];
+
   // Read images using OpenCV
   cv::Mat limg, rimg;
-  cv::imread("data/left.pgm", 0).convertTo(limg, CV_32FC1);
-  cv::imread("data/righ.pgm", 0).convertTo(rimg, CV_32FC1);
-  unsigned int w = limg.cols;
-  unsigned int h = limg.rows;
-  std::cout << "Image size = (" << w << "," << h << ")" << std::endl;
+  cv::imread(left_fn.c_str(), 0).convertTo(limg, CV_32FC1);
+  cv::imread(right_fn.c_str(), 0).convertTo(rimg, CV_32FC1);
+  unsigned int lw = limg.cols;
+  unsigned int rw = rimg.cols;
+  unsigned int lh = limg.rows;
+  unsigned int rh = rimg.rows;
+  std::cout << "Image size = (" << lw << "," << lh << ")" << std::endl;
+  std::cout << "Image size = (" << rw << "," << rh << ")" << std::endl;
   
   // Perform some initial blurring (if needed)
   cv::GaussianBlur(limg, limg, cv::Size(5,5), 1.0);
@@ -39,8 +79,8 @@ int main(int argc, char **argv)
   std::cout << "Initializing data..." << std::endl;
   InitCuda();
   CudaImage img1, img2;
-  img1.Allocate(w, h, iAlignUp(w, 128), false, NULL, (float*)limg.data);
-  img2.Allocate(w, h, iAlignUp(w, 128), false, NULL, (float*)rimg.data);
+  img1.Allocate(lw, lh, iAlignUp(lw, 128), false, NULL, (float*)limg.data);
+  img2.Allocate(rw, rh, iAlignUp(rw, 128), false, NULL, (float*)rimg.data);
   img1.Download();
   img2.Download(); 
 

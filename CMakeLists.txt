@@ -27,7 +27,8 @@ if (UNIX)
     list(APPEND CUDA_NVCC_FLAGS "-arch=sm_20;--compiler-options;-O2;-DVERBOSE") 
   else()
     set(EXTRA_CXX_FLAGS "-DVERBOSE -msse2 -std=c++0x ")
-    list(APPEND CUDA_NVCC_FLAGS "-arch=sm_20;--compiler-bindir=/usr/bin/gcc-4.4;--compiler-options;-O2;-DVERBOSE") 
+    #list(APPEND CUDA_NVCC_FLAGS "-arch=sm_20;--compiler-bindir=/usr/bin/gcc-4.4;--compiler-options;-O2;-DVERBOSE") 
+    list(APPEND CUDA_NVCC_FLAGS "-arch=sm_20;--compiler-bindir=/usr/bin/gcc;--compiler-options;-O2;-DVERBOSE") 
   endif()
 endif()
 
@@ -48,11 +49,16 @@ set(sources
   mainSift.cpp
 )
 
+set(external_sources
+  external/cpp-argparse/OptionParser.h
+  external/cpp-argparse/OptionParser.cpp
+)
+
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR} 
 )
 
-cuda_add_executable(cudasift ${cuda_sources} ${sources})
+cuda_add_executable(cudasift ${cuda_sources} ${sources} ${external_sources})
 
 set_target_properties(cudasift PROPERTIES
   COMPILE_FLAGS "${EXTRA_CXX_FLAGS}"			   
