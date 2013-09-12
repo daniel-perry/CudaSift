@@ -33,12 +33,8 @@ optparse::OptionParser buildParser()
     .description(desc)
     .epilog(epilog);
 
-  /*
-  parser.add_option("-t","--numthreads").action("store").type("int").set_default(0).help("number of threads to use.");
-  parser.add_option("-r","--radius").action("store").type("int").set_default(1).help("patch radius.");
-  parser.add_option("-m","--maskvolume").action("store").help("only consider pixel locations in this binary mask");
-  */
-   
+  parser.add_option("--initialblur").action("store").type("float").set_default(0.0).help("Initial blur.");
+  
   return parser;
 }
 
@@ -86,7 +82,7 @@ int main(int argc, char **argv)
 
   // Extract Sift features from images
   SiftData siftData1, siftData2;
-  float initBlur = 0.0f;
+  float initBlur = options.get("initialblur");
   float thresh = 5.0f;
   InitSiftData(siftData1, 2048, true, true); 
   InitSiftData(siftData2, 2048, true, true);
