@@ -316,52 +316,52 @@ __global__ void FindPoints(float *d_Data1, float *d_Data2, float *d_Data3, float
 
     if (y>1) {
       if (tx<MINMAX_W && xpos<maxx) {
-	float minv = fminf(fminf(fminf(fminf(fminf(ymin2[tx], ymin2[tx+2]), ymin1[tx+1]), ymin3[tx+1]), data2[ptr0+1]), data2[ptr2+1]);
-	minv = fminf(minv, d_Threshold[1]);
-	float maxv = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(ymax2[tx], ymax2[tx+2]), ymax1[tx+1]), ymax3[tx+1]), data2[ptr0+1]), data2[ptr2+1]);
-	maxv = fmaxf(maxv, d_Threshold[0]);
-	float val = data2[ptr1+1];
-	if (val<minv || val>maxv) {
-	  float dxx = 2.0f*val - data2[ptr1+0] - data2[ptr1+2];
-	  float dyy = 2.0f*val - data2[ptr0+1] - data2[ptr2+1];
-	  float dxy = 0.25f*(data2[ptr2+2] + data2[ptr0+0] - data2[ptr0+2] - data2[ptr2+0]);
-	  float tra = dxx + dyy;
-	  float det = dxx*dyy - dxy*dxy;
-	  if (tra*tra<d_EdgeLimit*det) {
-	    float edge = __fdividef(tra*tra, det);
-	    float dx = 0.5f*(data2[ptr1+2] - data2[ptr1+0]);
-	    float dy = 0.5f*(data2[ptr2+1] - data2[ptr0+1]); 
-	    float ds = 0.5f*(data1[ptr1+1] - data3[ptr1+1]); 
-	    float dss = 2.0f*val - data3[ptr1+1] - data1[ptr1+1];
-	    float dxs = 0.25f*(data3[ptr1+2] + data1[ptr1+0] - data1[ptr1+2] - data3[ptr1+0]);
-	    float dys = 0.25f*(data3[ptr2+1] + data1[ptr0+1] - data3[ptr0+1] - data1[ptr2+1]);
-	    float idxx = dyy*dss - dys*dys;
-	    float idxy = dys*dxs - dxy*dss;  
-	    float idxs = dxy*dys - dyy*dxs;
-	    float idyy = dxx*dss - dxs*dxs;
-	    float idys = dxy*dxs - dxx*dys;
-	    float idss = dxx*dyy - dxy*dxy;
-	    float idet = __fdividef(1.0f, idxx*dxx + idxy*dxy + idxs*dxs);
-	    float pdx = idet*(idxx*dx + idxy*dy + idxs*ds);
-	    float pdy = idet*(idxy*dx + idyy*dy + idys*ds);
-	    float pds = idet*(idxs*dx + idys*dy + idss*ds);
-	    if (pdx<-0.5f || pdx>0.5f || pdy<-0.5f || pdy>0.5f || pds<-0.5f || pds>0.5f) {
-	      pdx = __fdividef(dx, dxx);
-	      pdy = __fdividef(dy, dyy);
-	      pds = __fdividef(ds, dss);
-	    }
-	    float dval = 0.5f*(dx*pdx + dy*pdy + ds*pds);
-	    int maxPts = d_MaxNumPoints;
-	    unsigned int idx = atomicInc(d_PointCounter, 0x7fffffff);
-	    idx = (idx>=maxPts ? maxPts-1 : idx);
-	    d_Sift[idx + 0*maxPts] = xpos + pdx;
-	    d_Sift[idx + 1*maxPts] = ypos - 1 + pdy;
-	    d_Sift[idx + 2*maxPts] = d_Scales[0] * exp2f(pds*d_Factor);
-	    d_Sift[idx + 3*maxPts] = val + dval;
-	    d_Sift[idx + 4*maxPts] = edge;
-	    //printf("idx: %d %.1f %.1f %.2f\n", idx, d_Sift[idx + 0*maxPts], d_Sift[idx + 1*maxPts], edge);
-	  }
-	}
+        float minv = fminf(fminf(fminf(fminf(fminf(ymin2[tx], ymin2[tx+2]), ymin1[tx+1]), ymin3[tx+1]), data2[ptr0+1]), data2[ptr2+1]);
+        minv = fminf(minv, d_Threshold[1]);
+        float maxv = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(ymax2[tx], ymax2[tx+2]), ymax1[tx+1]), ymax3[tx+1]), data2[ptr0+1]), data2[ptr2+1]);
+        maxv = fmaxf(maxv, d_Threshold[0]);
+        float val = data2[ptr1+1];
+        if (val<minv || val>maxv) {
+          float dxx = 2.0f*val - data2[ptr1+0] - data2[ptr1+2];
+          float dyy = 2.0f*val - data2[ptr0+1] - data2[ptr2+1];
+          float dxy = 0.25f*(data2[ptr2+2] + data2[ptr0+0] - data2[ptr0+2] - data2[ptr2+0]);
+          float tra = dxx + dyy;
+          float det = dxx*dyy - dxy*dxy;
+          if (tra*tra<d_EdgeLimit*det) {
+            float edge = __fdividef(tra*tra, det);
+            float dx = 0.5f*(data2[ptr1+2] - data2[ptr1+0]);
+            float dy = 0.5f*(data2[ptr2+1] - data2[ptr0+1]); 
+            float ds = 0.5f*(data1[ptr1+1] - data3[ptr1+1]); 
+            float dss = 2.0f*val - data3[ptr1+1] - data1[ptr1+1];
+            float dxs = 0.25f*(data3[ptr1+2] + data1[ptr1+0] - data1[ptr1+2] - data3[ptr1+0]);
+            float dys = 0.25f*(data3[ptr2+1] + data1[ptr0+1] - data3[ptr0+1] - data1[ptr2+1]);
+            float idxx = dyy*dss - dys*dys;
+            float idxy = dys*dxs - dxy*dss;  
+            float idxs = dxy*dys - dyy*dxs;
+            float idyy = dxx*dss - dxs*dxs;
+            float idys = dxy*dxs - dxx*dys;
+            float idss = dxx*dyy - dxy*dxy;
+            float idet = __fdividef(1.0f, idxx*dxx + idxy*dxy + idxs*dxs);
+            float pdx = idet*(idxx*dx + idxy*dy + idxs*ds);
+            float pdy = idet*(idxy*dx + idyy*dy + idys*ds);
+            float pds = idet*(idxs*dx + idys*dy + idss*ds);
+            if (pdx<-0.5f || pdx>0.5f || pdy<-0.5f || pdy>0.5f || pds<-0.5f || pds>0.5f) {
+              pdx = __fdividef(dx, dxx);
+              pdy = __fdividef(dy, dyy);
+              pds = __fdividef(ds, dss);
+            }
+            float dval = 0.5f*(dx*pdx + dy*pdy + ds*pds);
+            int maxPts = d_MaxNumPoints;
+            unsigned int idx = atomicInc(d_PointCounter, 0x7fffffff);
+            idx = (idx>=maxPts ? maxPts-1 : idx);
+            d_Sift[idx + 0*maxPts] = xpos + pdx;
+            d_Sift[idx + 1*maxPts] = ypos - 1 + pdy;
+            d_Sift[idx + 2*maxPts] = d_Scales[0] * exp2f(pds*d_Factor);
+            d_Sift[idx + 3*maxPts] = val + dval;
+            d_Sift[idx + 4*maxPts] = edge;
+            //printf("idx: %d %.1f %.1f %.2f\n", idx, d_Sift[idx + 0*maxPts], d_Sift[idx + 1*maxPts], edge);
+          }
+        }
       }
     }
     __syncthreads();
