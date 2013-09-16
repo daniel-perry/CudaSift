@@ -20,7 +20,7 @@ void InitCuda()
   deviceInit(0);  
 }
 
-void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double initBlur, float thresh, float curvThresh, float lowestScale, float subsampling) 
+void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double initBlur, float thresh, float curvThresh, float descThresh, float lowestScale, float subsampling) 
 {
   TimerGPU timer(0);
   int w = img.width;
@@ -34,14 +34,14 @@ void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double init
     ExtractSift(siftData, subImg, numOctaves-1, totInitBlur, thresh, lowestScale, subsampling*2.0f);
   }
   if (lowestScale<subsampling*2.0f) 
-    ExtractSiftOctave(siftData, img, initBlur, thresh, curvThresh, lowestScale, subsampling);
+    ExtractSiftOctave(siftData, img, initBlur, thresh, curvThresh, descThresh, lowestScale, subsampling);
   double totTime = timer.read();
 #ifdef VERBOSE
   printf("ExtractSift time total =      %.2f ms\n\n", totTime);
 #endif
 }
 
-void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, float thresh, float curvThresh, float lowestScale, float subsampling)
+void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, float thresh, float curvThresh, float descThresh, float lowestScale, float subsampling)
 {
   const int maxPts = iAlignUp(4096, 128);
   const int nb = NUM_SCALES + 3;
@@ -93,7 +93,7 @@ void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, floa
   if (totPts>0) {
     ComputeOrientations(img, sift, totPts, maxPts); 
     SecondOrientations(sift, &totPts, maxPts);
-    ExtractSiftDescriptors(img, sift, desc, totPts, maxPts); 
+    ExtractSiftDescriptors(img, sift, desc, totPts, maxPts, descThresh); 
     AddSiftData(siftData, sift.d_data, desc.d_data, totPts, maxPts, subsampling);
   }
   safeCall(cudaThreadSynchronize());
@@ -321,7 +321,7 @@ double SecondOrientations(CudaImage &sift, int *initNumPts, int maxPts)
   return 0.0;
 }
 
-double ExtractSiftDescriptors(CudaImage &img, CudaImage &sift, CudaImage &desc, int numPts, int maxPts)
+double ExtractSiftDescriptors(CudaImage &img, CudaImage &sift, CudaImage &desc, int numPts, int maxPts, float descThresh)
 {
   float *d_sift = sift.d_data, *d_desc = desc.d_data;
   tex.addressMode[0] = cudaAddressModeClamp;
@@ -330,7 +330,8 @@ double ExtractSiftDescriptors(CudaImage &img, CudaImage &sift, CudaImage &desc, 
   tex.normalized = false;
   size_t offset = 0;
   safeCall(cudaBindTexture2D(&offset, tex, img.d_data, tex.channelDesc, img.width, img.height, img.pitch*sizeof(float)));
-   
+  safeCall(cudaMemcpyToSymbol(d_descThreshold, &descThresh, sizeof(float)));
+
   dim3 blocks(numPts); 
   dim3 threads(16);
   ExtractSiftDescriptors<<<blocks, threads>>>(img.d_data, d_sift, d_desc, maxPts);

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 __constant__ float d_Threshold[2];
+__constant__ float d_descThreshold;
 __constant__ float d_Scales[8], d_Factor;
 __constant__ float d_EdgeLimit;
 __constant__ int d_MaxNumPoints;
@@ -234,8 +235,10 @@ __global__ void ExtractSiftDescriptors(float *g_Data, float *d_sift, float *d_de
   for (int i=0;i<8;i++) {
     int p = NUMDESCBUFS*(i+t1);
     buffer[p] = isum*buffer[p];
-    if (buffer[p]>0.2f)
-      buffer[p] = 0.2f;
+    if (buffer[p]>d_descThreshold)
+      buffer[p] = d_descThreshold;
+    //if (buffer[p]>.2f)
+    //  buffer[p] = .2f;
     buffer[bptr] += buffer[p]*buffer[p];
   }
   __syncthreads();

@@ -91,11 +91,12 @@ int main(int argc, char **argv)
   float thresh = options.get("contrastthreshold"); // threshold for maxima (must be greater than this value).  = "threshold on feature contrast"
   float curvThresh = options.get("curvaturethreshold");
   int numOctaves = options.get("octaves");
-  std::cerr << initBlur << " " << thresh << " " << curvThresh << " " << numOctaves << std::endl;
+  float descThresh = options.get("descriptorthreshold");
+  //std::cerr << initBlur << " " << thresh << " " << curvThresh << " " << numOctaves << std::endl;
   InitSiftData(siftData1, 2048, true, true); 
   InitSiftData(siftData2, 2048, true, true);
-  ExtractSift(siftData1, img1, numOctaves, initBlur, thresh, curvThresh, 0.0f);
-  ExtractSift(siftData2, img2, numOctaves, initBlur, thresh, curvThresh, 0.0f);
+  ExtractSift(siftData1, img1, numOctaves, initBlur, thresh, curvThresh, descThresh, 0.0f);
+  ExtractSift(siftData2, img2, numOctaves, initBlur, thresh, curvThresh, descThresh, 0.0f);
 
   // Match Sift features and find a homography
   MatchSiftData(siftData1, siftData2);
