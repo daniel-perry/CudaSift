@@ -20,7 +20,7 @@ void InitCuda()
   deviceInit(0);  
 }
 
-void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double initBlur, float thresh, float lowestScale, float subsampling) 
+void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double initBlur, float thresh, float curvThresh, float lowestScale, float subsampling) 
 {
   TimerGPU timer(0);
   int w = img.width;
@@ -34,14 +34,14 @@ void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double init
     ExtractSift(siftData, subImg, numOctaves-1, totInitBlur, thresh, lowestScale, subsampling*2.0f);
   }
   if (lowestScale<subsampling*2.0f) 
-    ExtractSiftOctave(siftData, img, initBlur, thresh, lowestScale, subsampling);
+    ExtractSiftOctave(siftData, img, initBlur, thresh, curvThresh, lowestScale, subsampling);
   double totTime = timer.read();
 #ifdef VERBOSE
   printf("ExtractSift time total =      %.2f ms\n\n", totTime);
 #endif
 }
 
-void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, float thresh, float lowestScale, float subsampling)
+void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, float thresh, float curvThresh, float lowestScale, float subsampling)
 {
   const int maxPts = iAlignUp(4096, 128);
   const int nb = NUM_SCALES + 3;
@@ -83,7 +83,7 @@ void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, floa
   //std::cout << "subtract: " << timer2.read() << std::endl;
   TimerGPU timer3;
   double sigma = baseBlur*diffScale;
-  FindPointsMulti(diffImg, sift, thresh, maxPts, 16.0f, sigma, 1.0f/NUM_SCALES, lowestScale/subsampling);
+  FindPointsMulti(diffImg, sift, thresh, maxPts, curvThresh, sigma, 1.0f/NUM_SCALES, lowestScale/subsampling);
   //std::cout << "points:   " << timer3.read() << std::endl;
   double gpuTimeDoG = timer1.read();
 

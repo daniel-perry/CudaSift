@@ -22,7 +22,7 @@ void MatchAll(SiftData &siftData1, SiftData &siftData2, float *homography);
 #include "external/cpp-argparse/OptionParser.h"
 optparse::OptionParser buildParser()
 {
-  const std::string usage = "%prog [OPTION]... left.pgm right.pgm";
+  const std::string usage = "%prog [OPTION]... left.pgm right.pgm out.pgm";
   const std::string version = "%prog 0.3";
   const std::string desc = "CUDA SIFT";
   const std::string epilog = "";
@@ -33,7 +33,11 @@ optparse::OptionParser buildParser()
     .description(desc)
     .epilog(epilog);
 
-  parser.add_option("--initialblur").action("store").type("float").set_default(0.0).help("Initial blur.");
+  parser.add_option("--octaves").action("store").type("int").set_default(5).help("Number of octaves. Default 5.");
+  parser.add_option("--initialblur").action("store").type("float").set_default(0.0).help("Initial blur. Default 0.0.");
+  parser.add_option("--constrastthreshold").action("store").type("float").set_default(5.0).help("threshold for contrast, to minimize false positives. Default 5.0.");
+  parser.add_option("--curvaturethreshold").action("store").type("float").set_default(16.0).help("threshold for curvature, to minimize false positives. Default 16.0.");
+  parser.add_option("--descriptorthreshold").action("store").type("float").set_default(0.2).help("threshold for descriptor element magnitude, to minimize effect of illumination changes. Default 0.2.");
   
   return parser;
 }
@@ -55,6 +59,7 @@ int main(int argc, char **argv)
   }
   std::string left_fn = args[0];
   std::string right_fn = args[1];
+  std::string out_fn = args[2];
 
   // Read images using OpenCV
   cv::Mat limg, rimg;
@@ -82,12 +87,15 @@ int main(int argc, char **argv)
 
   // Extract Sift features from images
   SiftData siftData1, siftData2;
-  float initBlur = options.get("initialblur");
-  float thresh = 5.0f;
+  float initBlur = options.get("initialblur"); // initial blur before constructing pyramid.
+  float thresh = options.get("contrastthreshold"); // threshold for maxima (must be greater than this value).  = "threshold on feature contrast"
+  float curvThresh = options.get("curvaturethreshold");
+  int numOctaves = options.get("octaves");
+  std::cerr << initBlur << " " << thresh << " " << curvThresh << " " << numOctaves << std::endl;
   InitSiftData(siftData1, 2048, true, true); 
   InitSiftData(siftData2, 2048, true, true);
-  ExtractSift(siftData1, img1, 5, initBlur, thresh, 0.0f);
-  ExtractSift(siftData2, img2, 5, initBlur, thresh, 0.0f);
+  ExtractSift(siftData1, img1, numOctaves, initBlur, thresh, curvThresh, 0.0f);
+  ExtractSift(siftData2, img2, numOctaves, initBlur, thresh, curvThresh, 0.0f);
 
   // Match Sift features and find a homography
   MatchSiftData(siftData1, siftData2);
@@ -103,8 +111,10 @@ int main(int argc, char **argv)
   MatchAll(siftData1, siftData2, homography);
 #endif
   std::cout << "Number of original features: " <<  siftData1.numPts << " " << siftData2.numPts << std::endl;
-  std::cout << "Number of matching features: " << numFit << " " << numMatches << " " << 100.0f*numMatches/std::min(siftData1.numPts, siftData2.numPts) << "%" << std::endl;
-  cv::imwrite("data/limg_pts.pgm", limg);
+  float perc = 100.0f*numMatches/std::min(siftData1.numPts, siftData2.numPts);
+  std::cout << "Number of matching features: " << numFit << " " << numMatches << " " << perc << "%" << std::endl;
+  std::cerr << perc << std::endl;
+  cv::imwrite(out_fn.c_str(), limg);
 
   // Free Sift data from device
   FreeSiftData(siftData1);

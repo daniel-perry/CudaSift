@@ -28,7 +28,7 @@ typedef struct {
 } SiftData;
 
 void InitCuda();
-void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double initBlur, float thresh, float lowestScale = 0.0f, float subsampling = 1.0f);
+void ExtractSift(SiftData &siftData, CudaImage &img, int numOctaves, double initBlur, float thresh, float curvThresh, float lowestScale = 0.0f, float subsampling = 1.0f);
 void InitSiftData(SiftData &data, int num = 1024, bool host = false, bool dev = true);
 void FreeSiftData(SiftData &data);
 void PrintSiftData(SiftData &data);

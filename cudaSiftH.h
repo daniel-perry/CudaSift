@@ -8,7 +8,7 @@
 // CUDA SIFT extractor by Marten Bjorkman aka Celebrandil //
 //********************************************************//  
 
-void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, float thresh, float lowestScale, float subsampling);
+void ExtractSiftOctave(SiftData &siftData, CudaImage &img, double initBlur, float thresh, float curvThresh, float lowestScale, float subsampling);
 double ScaleDown(CudaImage &res, CudaImage &src, float variance);
 double Subtract(CudaImage &res, CudaImage &srcA, CudaImage &srcB);
 double FindPoints(CudaImage &data1, CudaImage &data2, CudaImage &data3, CudaImage &sift, float thresh, int maxPts, float edgeLimit, float scale, float factor);

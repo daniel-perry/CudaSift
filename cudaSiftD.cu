@@ -276,7 +276,7 @@ __global__ void FindPoints(float *d_Data1, float *d_Data2, float *d_Data3, float
   int ptr0 = tx;
   int ptr1 = tx;
   int yq = 0;
-  for (int y=0;y<MINMAX_H+2;y++) {
+  for (int y=0; y < MINMAX_H + 2; y++) {
 
     int ypos = MINMAX_H*blockIdx.y + y - 1;
     int yptr = min(max(ypos, 0), height - 1)*pitch;
@@ -320,7 +320,7 @@ __global__ void FindPoints(float *d_Data1, float *d_Data2, float *d_Data3, float
         minv = fminf(minv, d_Threshold[1]);
         float maxv = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(ymax2[tx], ymax2[tx+2]), ymax1[tx+1]), ymax3[tx+1]), data2[ptr0+1]), data2[ptr2+1]);
         maxv = fmaxf(maxv, d_Threshold[0]);
-        float val = data2[ptr1+1];
+        float val = data2[ptr1+1]; // center pixel
         if (val<minv || val>maxv) {
           float dxx = 2.0f*val - data2[ptr1+0] - data2[ptr1+2];
           float dyy = 2.0f*val - data2[ptr0+1] - data2[ptr2+1];
