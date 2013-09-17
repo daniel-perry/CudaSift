@@ -38,6 +38,7 @@ optparse::OptionParser buildParser()
   parser.add_option("--constrastthreshold").action("store").type("float").set_default(5.0).help("threshold for contrast, to minimize false positives. Default 5.0.");
   parser.add_option("--curvaturethreshold").action("store").type("float").set_default(16.0).help("threshold for curvature, to minimize false positives. Default 16.0.");
   parser.add_option("--descriptorthreshold").action("store").type("float").set_default(0.2).help("threshold for descriptor element magnitude, to minimize effect of illumination changes. Default 0.2.");
+  parser.add_option("--matchratio").action("store").type("float").set_default(0.8).help("match ratio for finding matches. Default 0.8.");
   
   return parser;
 }
@@ -92,6 +93,7 @@ int main(int argc, char **argv)
   float curvThresh = options.get("curvaturethreshold");
   int numOctaves = options.get("octaves");
   float descThresh = options.get("descriptorthreshold");
+  float matchRatio = options.get("matchratio");
   //std::cerr << initBlur << " " << thresh << " " << curvThresh << " " << numOctaves << std::endl;
   InitSiftData(siftData1, 2048, true, true); 
   InitSiftData(siftData2, 2048, true, true);
@@ -102,8 +104,8 @@ int main(int argc, char **argv)
   MatchSiftData(siftData1, siftData2);
   float homography[9];
   int numMatches;
-  FindHomography(siftData1, homography, &numMatches, 10000, 0.50f, 1.00f, 5.0);
-  int numFit = ImproveHomography(siftData1, homography, 3, 0.80f, 0.95f, 3.0);
+  FindHomography(siftData1, homography, &numMatches, 10000, (0.50f/0.80f)*matchRatio, 1.00f, 5.0);
+  int numFit = ImproveHomography(siftData1, homography, 3, matchRatio, 0.95f, 3.0);
 
   // Print out and store summary data
   PrintMatchData(siftData1, siftData2, img1);
